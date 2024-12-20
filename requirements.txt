@@ -3,3 +3,4 @@ torch==2.0.2
 torchvision==0.20.1
 Pillow==10.0.0     # For handling images
 gdown==4.8.0       # For downloading files from Google Drive
+numpy==1.25.0
