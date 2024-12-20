@@ -1,1 +1,6 @@
 streamlit>=1.26.0
+gdown
+numpy
+sci-kity learn
+pandas
+pillow
