@@ -1,7 +1,6 @@
-streamlit==1.25.0
-torch>=2.2.0,<=2.5.0
-torchvision>=0.15.0,<=0.20.0
-torchaudio>=2.2.0,<=2.5.0
-numpy>=1.19.3,<2
-Pillow==9.0.0
-gdown>=5.2.0
+streamlit==1.25.0  # Ensure compatibility with the app layout
+torch==2.0.1  # PyTorch version used for models
+torchvision==0.15.2  # Torchvision for model-related utilities
+opencv-python==4.8.0  # OpenCV for image processing
+numpy==1.24.4  # NumPy for numerical computations
+gdown==4.7.1  # For downloading files from Google Drive
