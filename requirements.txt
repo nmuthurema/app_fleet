@@ -1,6 +1,5 @@
-streamlit>=1.26.0
-gdown
-numpy
-scikit-learn
-pandas
-pillow
+streamlit>=1.26.0 # Ensure compatibility with the latest Streamlit version
+torch==2.0.0       # Replace with the PyTorch version you installed
+torchvision==0.15.1  # Replace with the matching version of TorchVision for your PyTorch version
+Pillow==10.0.0     # For handling images
+gdown==4.8.0       # For downloading files from Google Drive
