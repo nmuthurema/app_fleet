@@ -1,7 +1,7 @@
-streamlit==1.40.2
+streamlit==1.25.0
 torch==2.5.1+cpu
 torchvision==0.20.1+cpu
 torchaudio==2.5.1+cpu
-numpy==2.0.2
-Pillow==11.0.0
+numpy>=1.19.3,<2
+Pillow>=7.1.0,<10
 gdown==5.2.0
