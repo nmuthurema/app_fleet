@@ -1,4 +1,4 @@
-streamlit==1.25.0
+streamlit==1.40.2
 torch==2.5.1+cpu
 torchvision==0.20.1+cpu
 torchaudio==2.5.1+cpu
