@@ -1,6 +1,6 @@
 streamlit==1.25.0
-torch==2.5.0
-torchvision==0.20.0
-opencv-python==4.10.0.84
-numpy==1.26.4
-gdown==5.2.0
+torch
+torchvision
+opencv-python
+numpy
+gdown
