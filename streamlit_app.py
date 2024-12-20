@@ -1,7 +1,9 @@
 import streamlit as st
 from PIL import Image
+import torch
 import gdown
 import os
+from torchvision import transforms
 
 # Download models and logo from Google Drive (replace with actual file IDs)
 def download_from_drive(file_id, output):
@@ -10,8 +12,8 @@ def download_from_drive(file_id, output):
 
 # File IDs (Replace these with actual IDs from Google Drive)
 PIPE_MODEL_ID = "1ilIPLig6EVDfq-YWpsgUyEeX6ajnZkgm"
-TYRE_MODEL_ID = "1REcNnT0f0UdDar3ZzeuneLB02ufRfzFN"
-FUEL_MODEL_ID = "1wOdGs8Tiks-BGvAVsumtXNZz6z9Ir4qS"
+TYRE_MODEL_ID = "14qoYbM_hcNhCJr6qx4T6og9348qTcl36"
+FUEL_MODEL_ID = "1RX_owp0qRGiJlbBFRjsTUEEVeQiRDz0v"
 LOGO_ID = "1REcNnT0f0UdDar3ZzeuneLB02ufRfzFN"
 ROUTE_ID = "1PdhdlIonkZrYcjRagBTyFfqS1ZTHJUMx"
 
@@ -25,11 +27,31 @@ if not os.path.exists("fuel_model.pth"):
 if not os.path.exists("logo.png"):
     download_from_drive(LOGO_ID, "logo.png")
 
-# Load models (dummy placeholders for actual implementation)
-pipe_model = "Loaded Pipe Counting Model"
-tyre_model = "Loaded Tyre Life Model"
-fuel_model = "Loaded Fuel Requirement Model"
+# Load models
+pipe_model = torch.load("pipe_model.pth", map_location=torch.device('cpu'))
+tyre_model = torch.load("tyre_model.pth", map_location=torch.device('cpu'))
+fuel_model = torch.load("fuel_model.pth", map_location=torch.device('cpu'))
 
+# Set models to evaluation mode
+pipe_model.eval()
+tyre_model.eval()
+fuel_model.eval()
+
+# Preprocessing functions
+def preprocess_image(image):
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),  # Adjust based on model input size
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    return transform(image)
+
+def prepare_fuel_input(source, destination, vehicle):
+    # Example: Encode source, destination, and vehicle data into a tensor
+    # Replace with your specific input preparation logic
+    input_tensor = torch.tensor([len(source), len(destination), vehicle["capacity"], vehicle["fuel_efficiency"]])
+    return input_tensor.unsqueeze(0)
+    
 # Streamlit App
 st.set_page_config(page_title="Vehicle & Infrastructure Tools", layout="wide", page_icon="🚗")
 
@@ -42,7 +64,7 @@ if not st.session_state.authenticated:
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     if st.button("Login"):
-        if username == "admin" and password == "password":  # Replace with secure auth logic
+        if username == "admin" and password == "kss@1234":  # Replace with secure auth logic
             st.session_state.authenticated = True
             st.success("Login successful!")
             st.rerun()
@@ -64,19 +86,18 @@ else:
     module = st.sidebar.radio("Modules:", ["Pipe Counting", "Fuel Requirement", "Tyre Life", "Feedback"])
 
     # Pipe Counting Module
-    if module == "Pipe Counting":
+     if module == "Pipe Counting":
         st.header("Pipe Counting")
-        if "pipe_uploaded_file" not in st.session_state:
-            st.session_state.pipe_uploaded_file = None
-
-        st.session_state.pipe_uploaded_file = st.file_uploader("Upload an image of the pipes:", type=["jpg", "png", "jpeg"])
-        if st.session_state.pipe_uploaded_file is not None:
-            image = Image.open(st.session_state.pipe_uploaded_file)
+        uploaded_file = st.file_uploader("Upload an image of the pipes:", type=["jpg", "png", "jpeg"])
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file).convert("RGB")
             st.image(image, caption="Uploaded Image", use_container_width=True)
-            
-            # Process image with pipe_model (dummy example)
-            st.write("Processing...")
-            num_pipes = 42  # Replace with actual model prediction
+
+            # Preprocess the image and predict
+            input_tensor = preprocess_image(image).unsqueeze(0)
+            with torch.no_grad():
+                output = pipe_model(input_tensor)
+                num_pipes = output.argmax().item()
             st.success(f"Number of pipes detected: {num_pipes}")
 
         if st.button("Reset"):
@@ -87,13 +108,9 @@ else:
     # Fuel Requirement Module
     elif module == "Fuel Requirement":
         st.header("Fuel Requirement Estimator")
-        if "fuel_reset" not in st.session_state:
-            st.session_state.fuel_reset = False
+        source = st.text_input("Source Location:")
+        destination = st.text_input("Destination Location:")
 
-        source = st.text_input("Source Location:", key="source")
-        destination = st.text_input("Destination Location:", key="destination")
-        
-        # Vehicle options with capacities and fuel efficiencies
         vehicle_options = {
             "6 Wheeler (10 Tons)": {"capacity": 10, "fuel_efficiency": 6},
             "10 Wheeler (15 Tons)": {"capacity": 15, "fuel_efficiency": 5},
@@ -102,17 +119,16 @@ else:
             "16 Wheeler (30 Tons)": {"capacity": 30, "fuel_efficiency": 3.2},
             "18 Wheeler (35 Tons)": {"capacity": 35, "fuel_efficiency": 2.5},
         }
-        
-        vehicle_type = st.selectbox("Type of Vehicle:", list(vehicle_options.keys()), key="vehicle_type")
+
+        vehicle_type = st.selectbox("Type of Vehicle:", list(vehicle_options.keys()))
         selected_vehicle = vehicle_options[vehicle_type]
 
-        # Calculate fuel requirements
         if st.button("Calculate"):
-            st.write("Fetching route and fuel data...")
-            distance = 191  # Example distance in km
-            fuel_efficiency = selected_vehicle["fuel_efficiency"]
-            fuel_required = distance / fuel_efficiency
-
+            input_tensor = prepare_fuel_input(source, destination, selected_vehicle)
+            with torch.no_grad():
+                fuel_required = fuel_model(input_tensor).item()
+            st.success(f"Estimated Fuel Required: {fuel_required:.2f} liters")
+            
             # Download the route image from Google Drive using ROUTE_ID
             if not os.path.exists("route.png"):
                 download_from_drive(ROUTE_ID, "route.png")
@@ -133,23 +149,19 @@ else:
                     del st.session_state[key]
             st.rerun()
 
-
-
-    # Tyre Life Module
+   # Tyre Life Module
     elif module == "Tyre Life":
         st.header("Tyre Life Prediction")
-        if "tyre_uploaded_file" not in st.session_state:
-            st.session_state.tyre_uploaded_file = None
-
-        st.session_state.tyre_uploaded_file = st.file_uploader("Upload an image of the tyre:", type=["jpg", "png", "jpeg"])
-        if st.session_state.tyre_uploaded_file is not None:
-            image = Image.open(st.session_state.tyre_uploaded_file)
+        uploaded_file = st.file_uploader("Upload an image of the tyre:", type=["jpg", "png", "jpeg"])
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file).convert("RGB")
             st.image(image, caption="Uploaded Image", use_container_width=True)
-            
-            # Process image with tyre_model (dummy example)
-            st.write("Analyzing...")
-            tyre_life = "12,000 km remaining"  # Replace with actual model prediction
-            st.success(f"Estimated Tyre Life: {tyre_life}")
+
+            # Preprocess the image and predict
+            input_tensor = preprocess_image(image).unsqueeze(0)
+            with torch.no_grad():
+                tyre_life = tyre_model(input_tensor).item()
+            st.success(f"Estimated Tyre Life: {tyre_life:.2f} km")
 
         if st.button("Reset", key="tyre_reset"):
             st.session_state.tyre_uploaded_file = None
