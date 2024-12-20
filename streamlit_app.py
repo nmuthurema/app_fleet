@@ -1,5 +1,6 @@
 import streamlit as st
-from PIL import Image
+import cv2
+import numpy as np
 import torch
 import gdown
 import os
@@ -36,14 +37,19 @@ pipe_model.eval()
 tyre_model.eval()
 fuel_model.eval()
 
-# Preprocessing functions
+# Preprocessing function using OpenCV
 def preprocess_image(image):
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-    return transform(image)
+    # Resize to 224x224
+    image = cv2.resize(image, (224, 224))
+    # Normalize the image
+    image = image / 255.0
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    image = (image - mean) / std
+    # Transpose to PyTorch format: C x H x W
+    image = np.transpose(image, (2, 0, 1))
+    # Convert to tensor
+    return torch.tensor(image, dtype=torch.float).unsqueeze(0)
 
 def prepare_fuel_input(source, destination, vehicle):
     input_tensor = torch.tensor([len(source), len(destination), vehicle["capacity"], vehicle["fuel_efficiency"]])
@@ -71,8 +77,8 @@ else:
     # App Header
     col1, col2 = st.columns([1, 4])
     with col1:
-        logo = Image.open("logo.png")
-        st.image(logo, use_container_width=True)
+        logo = cv2.imread("logo.png")
+        st.image(cv2.cvtColor(logo, cv2.COLOR_BGR2RGB), use_column_width=True)
     with col2:
         st.title("Vehicle & Infrastructure Tools")
         st.write("Analyze pipes, estimate fuel requirements, and predict tyre life with ease!")
@@ -86,10 +92,11 @@ else:
         st.header("Pipe Counting")
         uploaded_file = st.file_uploader("Upload an image of the pipes:", type=["jpg", "png", "jpeg"])
         if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert("RGB")
-            st.image(image, caption="Uploaded Image", use_container_width=True)
+            file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+            image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+            st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_column_width=True)
 
-            input_tensor = preprocess_image(image).unsqueeze(0)
+            input_tensor = preprocess_image(image)
             with torch.no_grad():
                 output = pipe_model(input_tensor)
                 num_pipes = output.argmax().item()
@@ -130,10 +137,11 @@ else:
         st.header("Tyre Life Prediction")
         uploaded_file = st.file_uploader("Upload an image of the tyre:", type=["jpg", "png", "jpeg"])
         if uploaded_file is not None:
-            image = Image.open(uploaded_file).convert("RGB")
-            st.image(image, caption="Uploaded Image", use_container_width=True)
+            file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+            image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+            st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_column_width=True)
 
-            input_tensor = preprocess_image(image).unsqueeze(0)
+            input_tensor = preprocess_image(image)
             with torch.no_grad():
                 tyre_life = tyre_model(input_tensor).item()
             st.success(f"Estimated Tyre Life: {tyre_life:.2f} km")
