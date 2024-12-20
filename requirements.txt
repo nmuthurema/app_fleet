@@ -4,4 +4,4 @@ torchvision==0.20.1+cpu
 torchaudio==2.5.1+cpu
 numpy==2.0.2
 Pillow==11.0.0
-gdown==4.8.0
+gdown==5.2.0
