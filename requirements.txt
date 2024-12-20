@@ -1,6 +1,7 @@
-streamlit>=1.26.0 # Ensure compatibility with the latest Streamlit version
-torch==2.0.2+cpu       
+streamlit==1.25.0
+torch==2.5.1+cpu
 torchvision==0.20.1+cpu
-Pillow==10.0.0     # For handling images
-gdown==4.8.0       # For downloading files from Google Drive
-numpy==1.25.0
+torchaudio==2.5.1+cpu
+numpy==2.0.2
+Pillow==11.0.0
+gdown==4.8.0
