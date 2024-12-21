@@ -186,7 +186,7 @@ else:
             logo_image = Image.fromarray(logo_rgb)
     
             # Display the logo with version compatibility
-            if version.parse(st.__version__) >= version.parse("1.12.0"):
+            if version.parse(st.__version__) > version.parse("1.12.0"):
                 st.image(logo_image, use_container_width=True)
             else:
                 st.image(logo_image, use_column_width=True)
@@ -214,7 +214,7 @@ else:
                 
                 # Check Streamlit version for compatibility
                 from packaging import version
-                if version.parse(st.__version__) >= version.parse("1.12.0"):
+                if version.parse(st.__version__) > version.parse("1.12.0"):
                     st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_container_width=True)
                 else:
                     st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_column_width=True)
