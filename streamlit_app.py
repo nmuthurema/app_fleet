@@ -229,7 +229,7 @@ def main():
             st.markdown("Select an option from the sidebar to get started.")
 
         elif option == "Pipe Counting":
-            perform_pipe_counting()
+            perform_pipe_counting(pipe_model)
 
         elif option == "Tyre Life Prediction":
             perform_tyre_life_prediction(tyre_model)
