@@ -1,6 +1,8 @@
 streamlit==1.25.0
-torch
-torchvision
-opencv-python
+opencv-python-headless
+tensorflow
 numpy
 gdown
+scikit-learn
+pandas
+pillow
