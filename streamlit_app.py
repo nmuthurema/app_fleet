@@ -177,23 +177,35 @@ def perform_tyre_life_prediction(tyre_model):
         st.write(f"**Estimated Lifetime:** {tyre_info['lifetime']}")
         st.write(f"**Maintenance Suggestion:** {tyre_info['maintenance']}")
 
-def perform_pipe_counting():
+def perform_pipe_counting(pipe_model):
     st.title("Pipe Counting")
     uploaded_file = st.file_uploader("Upload an image for analysis", type=["jpg", "png", "jpeg"])
+    
     if uploaded_file is not None:
         try:
-            # Ensure the image is loaded properly
-            image = np.array(Image.open(uploaded_file))
-            # Ensure the model is loaded and accessible
-            global pipe_model
+            # Open the image file and convert it to a format compatible with OpenCV
+            image = Image.open(uploaded_file).convert('RGB')
+            image_array = np.array(image)  # Convert image to numpy array
+
             if pipe_model:
-                prediction = pipe_model.predict(preprocess_image(image, pipe_model))
+                # Preprocess the image
+                processed_image = preprocess_image(image_array, pipe_model)
+
+                # Predict the number of pipes in the image using the model
+                prediction = pipe_model.predict(processed_image)
+
+                # Assuming the model returns a direct count, not classifications
+                predicted_count = int(prediction.flatten()[0])
+
+                # Display the uploaded image and the prediction result
                 st.image(image, caption='Uploaded Image', use_column_width=True)
-                st.success(f"Number of pipes detected: {np.argmax(prediction)}")
+                st.success(f"Number of pipes detected: {predicted_count}")
             else:
                 st.error("Pipe model is not loaded properly.")
+
         except Exception as e:
             st.error(f"Failed to process the image or prediction: {e}")
+
 def collect_user_feedback():
     st.header("User Feedback")
     feedback = st.text_area("Share your feedback about the app:")
