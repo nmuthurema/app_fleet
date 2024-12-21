@@ -5,7 +5,7 @@ An intelligent, user-friendly solution to manage KSS's fleet operations effectiv
 ## App Access 🌐
 
 Access the Fleet Management App below:
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app_fleet.streamlit.app/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://app-fleet.streamlit.app/)
 
 ## Open in GitHub Codespaces 💻
 
