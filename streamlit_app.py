@@ -62,7 +62,6 @@ try:
 
     # Load the model
     pipe_model = tf.keras.models.load_model("pipe_model.h5")
-    st.success("Pipe model loaded successfully!")
 except tf.errors.OpError as e:
     st.error(f"TensorFlow error while loading pipe model: {e}")
 except ValueError as e:
@@ -71,20 +70,19 @@ except Exception as e:
     st.error(f"Unexpected error while loading pipe model: {e}")
 
 try:
-    if not os.path.exists("tyre_model.h5"):
+    # Validate file existence and size
+    if not os.path.exists("tyre_model.h5") or os.path.getsize("tyre_model.h5") == 0:
         st.write("Downloading tyre model...")
         download_from_drive(TYRE_MODEL_ID, "tyre_model.h5")
+        if not os.path.exists("tyre_model.h5") or os.path.getsize("tyre_model.h5") == 0:
+            raise ValueError("Tyre model file is empty or corrupted.")
 
-    # Ensure the file is valid before loading
-    if os.path.getsize("tyre_model.h5") == 0:
-        raise ValueError("Tyre model file is empty or corrupted.")
-    
+    # Load the model
     tyre_model = tf.keras.models.load_model("tyre_model.h5")
-    
 except tf.errors.OpError as e:
     st.error(f"TensorFlow error while loading tyre model: {e}")
 except ValueError as e:
-    st.error(f"Value error: {e}")
+    st.error(f"Validation error: {e}")
 except Exception as e:
     st.error(f"Unexpected error while loading tyre model: {e}")
 
