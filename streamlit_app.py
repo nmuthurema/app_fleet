@@ -14,7 +14,14 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 
 # Initialize and Configure the App
 st.set_page_config(page_title="Fleet Management", layout="wide", page_icon="🚗")
-GOOGLE_MAPS_API_KEY = os.getenv('AIzaSyD9g1A2zYNNFMLfN0MReug2H5D8qjIkyNA')
+
+# Retrieve the Google Maps API Key from Environment Variables
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
+if not GOOGLE_MAPS_API_KEY:
+    st.error('Google Maps API key is not set. Please set it as an environment variable.')
+    raise ValueError("Google Maps API key is not set.")
+
+# Initialize Google Maps Client
 gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
 
 # Define Google Drive downloader
