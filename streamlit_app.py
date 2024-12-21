@@ -26,6 +26,14 @@ def download_from_drive(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
+# Define load image
+def load_image(image_path):
+    try:
+        return Image.open(image_path)
+    except Exception as e:
+        st.error(f"Failed to load image at {image_path}: {str(e)}")
+        return None
+
 # Load Models and Files
 def load_model(file_path):
     try:
@@ -141,7 +149,10 @@ def main():
         option = st.sidebar.selectbox("Choose an option", ["Home", "Pipe Counting", "Tyre Life Prediction", "Fuel Efficiency", "Feedback"])
         if option == "Home":
             st.title("Welcome to Fleet Management Dashboard")
-            st.image(models['logo'], width=300)
+            logo_path = 'path/to/logo.png'  # Ensure this is correct
+            logo_image = load_image(logo_path)
+            if logo_image:
+                st.image(logo_image, width=300)
             st.markdown("Select an option from the sidebar to get started.")
         elif option == "Pipe Counting":
             perform_pipe_counting()
