@@ -139,6 +139,44 @@ def authenticate_user():
 
     return st.session_state['authenticated']
 
+# Function to Perform Tyre Life Prediction
+def perform_tyre_life_prediction(model):
+    st.title("Tyre Life Prediction")
+    uploaded_file = st.file_uploader("Upload an image of the tyre", type=["jpg", "png", "jpeg"])
+    if uploaded_file is not None:
+        # Load image using PIL
+        image = Image.open(uploaded_file).convert('RGB')
+        
+        # Preprocess the image
+        image_array = preprocess_image(image, model)
+        
+        # Make predictions
+        prediction = model.predict(image_array)
+        predicted_class = np.argmax(prediction)
+        confidence = np.max(prediction) * 100
+        
+        # Display the image and the results
+        st.image(image, caption='Uploaded Tyre Image', use_column_width=True)
+        st.success(f"Predicted Class: {predicted_class}, Confidence: {confidence:.2f}%")
+
+def perform_pipe_counting():
+    st.title("Pipe Counting")
+    uploaded_file = st.file_uploader("Upload an image for analysis", type=["jpg", "png", "jpeg"])
+    if uploaded_file is not None:
+        try:
+            # Ensure the image is loaded properly
+            image = np.array(Image.open(uploaded_file))
+            # Ensure the model is loaded and accessible
+            global pipe_model
+            if pipe_model:
+                prediction = pipe_model.predict(preprocess_image(image, pipe_model))
+                st.image(image, caption='Uploaded Image', use_column_width=True)
+                st.success(f"Number of pipes detected: {np.argmax(prediction)}")
+            else:
+                st.error("Pipe model is not loaded properly.")
+        except Exception as e:
+            st.error(f"Failed to process the image or prediction: {e}")
+            
 def main():
     if authenticate_user():
         option = st.sidebar.selectbox("Choose an option", ["Home", "Pipe Counting", "Tyre Life Prediction", "Fuel Efficiency", "Feedback"])
