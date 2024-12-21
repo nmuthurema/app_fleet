@@ -29,6 +29,7 @@ def download_from_drive(file_id, output):
 PIPE_MODEL_ID = "1BUatvInxZEdFx_uRN7wHzeyVTPJis0uh"
 TYRE_MODEL_ID = "14qoYbM_hcNhCJr6qx4T6og9348qTcl36"
 FUEL_MODEL_ID = "1RX_owp0qRGiJlbBFRjsTUEEVeQiRDz0v"
+SCALER_ID = "1SuZpcvtOInDt5g9gVGlG8uSwN5j9AD4f"
 LOGO_ID = "1REcNnT0f0UdDar3ZzeuneLB02ufRfzFN"
 
 # Download files (Run once)
@@ -41,6 +42,9 @@ if not os.path.exists("tyre_model.h5"):
 if not os.path.exists("fuel_model.pkl"):
     st.write("Downloading fuel model...")
     download_from_drive(FUEL_MODEL_ID, "fuel_model.pkl")
+if not os.path.exists("scaler.pkl"):
+    st.write("Downloading standard scaler...")
+    download_from_drive(SCALER_ID, "scaler.pkl")
 if not os.path.exists("logo.png"):
     st.write("Downloading logo...")
     download_from_drive(LOGO_ID, "logo.png")
@@ -59,22 +63,14 @@ except Exception as e:
 try:
     with open("fuel_model.pkl", "rb") as f:
         fuel_model = pickle.load(f)
-    scaler = StandardScaler()
+    with open("scaler.pkl", "rb") as f:
+        scaler = pickle.load(f)
+    st.success("Fuel model and scaler loaded successfully!")
 except Exception as e:
-    st.error(f"Failed to load fuel model: {e}")
+    st.error(f"Failed to load fuel model or scaler: {e}")
 
 # Utility Functions
 def preprocess_image(image, model):
-    """
-    Preprocess any input image to match the required shape of the given model.
-
-    Args:
-        image (numpy.ndarray): Input image in BGR format.
-        model (tf.keras.Model): The TensorFlow/Keras model to determine preprocessing.
-
-    Returns:
-        numpy.ndarray: Preprocessed image ready for model prediction.
-    """
     required_shape = model.input_shape[1:]  # (height, width, channels)
     image = cv2.resize(image, (required_shape[1], required_shape[0]))
     if required_shape[-1] == 1:
@@ -222,19 +218,27 @@ else:
 
                     if st.button("Predict Fuel Requirement"):
                         try:
+                            # Prepare input data
                             input_data = [distance, weight, selected_vehicle["capacity"], selected_vehicle["fuel_efficiency"]]
+                            
+                            # Scale input data using the loaded scaler
                             input_data_scaled = scaler.transform([input_data])
+                            
+                            # Predict fuel efficiency
                             predicted_efficiency = fuel_model.predict(input_data_scaled)[0]
-
+                            
+                            # Sanity checks for efficiency
                             max_efficiency = 6 if selected_vehicle["capacity"] <= 15 else 3.5
                             predicted_efficiency = min(max_efficiency, max(1, predicted_efficiency))
-
+                            
+                            # Calculate fuel requirement
                             predicted_fuel = distance / predicted_efficiency
-
+                            
                             st.success(f"Predicted Fuel Requirement: {predicted_fuel:.2f} liters")
                             st.info(f"Predicted Fuel Efficiency: {predicted_efficiency:.2f} km/l")
                         except Exception as e:
                             st.error(f"Error during prediction: {e}")
+
 
     elif module == "Feedback":
         st.header("User Feedback")
