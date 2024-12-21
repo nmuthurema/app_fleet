@@ -176,6 +176,14 @@ def perform_pipe_counting():
                 st.error("Pipe model is not loaded properly.")
         except Exception as e:
             st.error(f"Failed to process the image or prediction: {e}")
+def collect_user_feedback():
+    st.header("User Feedback")
+    feedback = st.text_area("Share your feedback about the app:")
+    if st.button("Submit Feedback"):
+        if feedback:
+            st.success("Thank you for your feedback!")
+        else:
+            st.error("Please provide some feedback before submitting.")
             
 def main():
     if authenticate_user():
