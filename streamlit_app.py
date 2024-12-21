@@ -243,7 +243,16 @@ def main():
             destination = st.text_input("Destination Location:")
             actual_weight = st.number_input("Enter weight of goods (in tons):", min_value=7.5, value=20.0)
             number_of_wheels = st.selectbox("Number of Wheels:", [6, 10, 12, 14, 16, 18])
-
+            
+            # Mileage table as provided
+            mileage_table = pd.DataFrame({
+                "No of wheels": [6, 8, 10, 12, 14, 16, 18],
+                "Tonnage": [7.5, 13.5, 20, 25, 30, 35, 40],
+                "One Side Upper": [7.5, 6.5, 5.5, 5, 4.5, 4.5, 4],
+                "One Side Lower": [6.5, 5.5, 4, 3.5, 3.2, 3, 2],
+                "Two Sides Upper": [6.5, 5.7, 5, 4.7, 4.2, 4.2, 3.7],
+                "Two Sides Lower": [5.5, 4.7, 3.5, 3.2, 2.9, 2.7, 1.7]
+            })
             # Vehicle Options: number_of_wheels determines capacity and mileage
             vehicle_options = {
                 6: {"capacity": 7.5, "one_side_mileage": 7, "both_side_mileage": 6},
@@ -280,6 +289,17 @@ def main():
                         st.write("Route Map:")
                         route_map = display_map(source_coords, destination_coords, route_coords)
                         folium_static(route_map)
+                        loading_condition = st.radio(
+                            "Is the vehicle loaded on one side or both sides?",
+                            ("One Side Loaded", "Both Sides Loaded")
+                        )
+            
+                        # Retrieve mileage limits based on user input
+                        mileage_info = mileage_table[mileage_table["No of wheels"] == number_of_wheels].iloc[0]
+                        if loading_condition == "One Side Loaded":
+                            min_mileage, max_mileage = mileage_info["One Side Lower"], mileage_info["One Side Upper"]
+                        else:
+                            min_mileage, max_mileage = mileage_info["Two Sides Lower"], mileage_info["Two Sides Upper"]
 
                         # Prepare Data for Scaler
                         try:
@@ -288,10 +308,7 @@ def main():
 
                             # Predict Fuel Efficiency
                             predicted_efficiency = fuel_model.predict(input_data_scaled)[0]
-
-                            # Constrain efficiency to realistic bounds
-                            max_efficiency = 6 if selected_vehicle["capacity"] <= 15 else 3.5
-                            predicted_efficiency = min(max_efficiency, max(1, predicted_efficiency))
+                            predicted_efficiency = min(max(predicted_efficiency, min_mileage), max_mileage)
 
                             # Calculate Fuel Requirement
                             predicted_fuel = distance / predicted_efficiency
