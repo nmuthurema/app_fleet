@@ -192,8 +192,8 @@ else:
             else:
                 st.image(logo_image, use_column_width=True)
 
-    except Exception as e:
-        st.error(f"Failed to load logo: {e}")
+        except Exception as e:
+            st.error(f"Failed to load logo: {e}")
 
     with col2:
         st.title("Fleet Management")
