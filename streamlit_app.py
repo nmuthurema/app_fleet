@@ -120,15 +120,15 @@ def authenticate_user():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     if not st.session_state.authenticated:
-        with st.sidebar:
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            if st.button("Login"):
-                if username == "admin" and password == "admin1234":  # Placeholder credentials
-                    st.session_state.authenticated = True
-                    st.success("Login successful!")
-                else:
-                    st.error("Incorrect username or password.")
+        st.title("User Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Login"):
+            if username == "admin" and password == "kss@1234":
+                st.session_state.authenticated = True
+                st.success("Login successful!")
+            else:
+                st.error("Invalid username or password.")
     return st.session_state.authenticated
 
 # Main Functionality
