@@ -267,7 +267,8 @@ def main():
             capacity = selected_vehicle["capacity"]  # Extract capacity
             loading_condition = st.radio(
                 "Is the vehicle loaded on one side or both sides?",
-                ("One Side Loaded", "Both Sides Loaded")
+                ("One Side Loaded", "Both Sides Loaded"),
+                key=f"loading_condition_{number_of_wheels}"
             )
 
             # Calculate Mileage Based on Loading Condition
