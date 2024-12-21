@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import googlemaps
+from PIL import Image
 import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import VotingRegressor
@@ -176,8 +177,17 @@ else:
     col1, col2 = st.columns([1, 4])
     with col1:
         try:
+            # Load the image using cv2
             logo = cv2.imread("logo.png")
-            st.image(cv2.cvtColor(logo, cv2.COLOR_BGR2RGB), use_container_width=True)
+    
+            # Convert BGR (OpenCV format) to RGB
+            logo_rgb = cv2.cvtColor(logo, cv2.COLOR_BGR2RGB)
+    
+            # Convert to PIL Image for Streamlit compatibility
+            logo_image = Image.fromarray(logo_rgb)
+    
+            # Display the logo using `use_container_width`
+            st.image(logo_image, use_container_width=True)
         except Exception as e:
             st.error(f"Failed to load logo: {e}")
     with col2:
