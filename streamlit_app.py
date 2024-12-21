@@ -51,21 +51,47 @@ if not os.path.exists("logo.png"):
 
 # Load models with error handling
 try:
+    if not os.path.exists("pipe_model.h5"):
+        st.write("Downloading pipe model...")
+        download_from_drive(PIPE_MODEL_ID, "pipe_model.h5")
+
+    # Ensure the file is valid before loading
+    if os.path.getsize("pipe_model.h5") == 0:
+        raise ValueError("Pipe model file is empty or corrupted.")
+
     pipe_model = tf.keras.models.load_model("pipe_model.h5")
+    
+except tf.errors.OpError as e:
+    st.error(f"TensorFlow error while loading pipe model: {e}")
+except ValueError as e:
+    st.error(f"Value error: {e}")
 except Exception as e:
-    st.error(f"Failed to load pipe model: {e}")
+    st.error(f"Unexpected error while loading pipe model: {e}")
 
 try:
+    if not os.path.exists("tyre_model.h5"):
+        st.write("Downloading tyre model...")
+        download_from_drive(TYRE_MODEL_ID, "tyre_model.h5")
+
+    # Ensure the file is valid before loading
+    if os.path.getsize("tyre_model.h5") == 0:
+        raise ValueError("Tyre model file is empty or corrupted.")
+    
     tyre_model = tf.keras.models.load_model("tyre_model.h5")
+    
+except tf.errors.OpError as e:
+    st.error(f"TensorFlow error while loading tyre model: {e}")
+except ValueError as e:
+    st.error(f"Value error: {e}")
 except Exception as e:
-    st.error(f"Failed to load tyre model: {e}")
+    st.error(f"Unexpected error while loading tyre model: {e}")
 
 try:
     with open("fuel_model.pkl", "rb") as f:
         fuel_model = pickle.load(f)
     with open("scaler.pkl", "rb") as f:
         scaler = pickle.load(f)
-    st.success("Fuel model and scaler loaded successfully!")
+    
 except Exception as e:
     st.error(f"Failed to load fuel model or scaler: {e}")
 
@@ -151,7 +177,7 @@ else:
     with col1:
         try:
             logo = cv2.imread("logo.png")
-            st.image(cv2.cvtColor(logo, cv2.COLOR_BGR2RGB), use_column_width=True)
+            st.image(cv2.cvtColor(logo, cv2.COLOR_BGR2RGB), use_container_width=True)
         except Exception as e:
             st.error(f"Failed to load logo: {e}")
     with col2:
@@ -161,40 +187,71 @@ else:
     st.sidebar.title("Choose a Module")
     module = st.sidebar.radio("Modules:", ["Pipe Counting", "Fuel Requirement", "Tyre Life", "Feedback"])
 
-    if module == "Pipe Counting" or module == "Tyre Life":
+    if module in ["Pipe Counting", "Tyre Life"]:
+        # File upload
         uploaded_file = st.file_uploader("Upload an image:", type=["jpg", "png", "jpeg"])
         if uploaded_file is not None:
-            file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-            image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-            st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_column_width=True)
-
-            model = pipe_model if module == "Pipe Counting" else tyre_model
             try:
+                # Read and display the uploaded image
+                file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+                image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+                st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_container_width=True)
+
+                # Select appropriate model
+                model = pipe_model if module == "Pipe Counting" else tyre_model
+
+                # Preprocess the image
                 input_tensor = preprocess_image(image, model)
+
+                # Make predictions
                 prediction = model.predict(input_tensor)
 
+                # Display results based on module type
                 if module == "Pipe Counting":
                     st.success(f"Number of pipes detected: {np.argmax(prediction)}")
                 elif module == "Tyre Life":
                     st.success(f"Estimated Tyre Life: {prediction[0, 0]:.2f} km")
+
+            except cv2.error as e:
+                st.error(f"Failed to process the image: OpenCV Error - {e}")
+            except ValueError as e:
+                st.error(f"Image preprocessing failed: {e}")
             except Exception as e:
-                st.error(f"Failed to make a prediction: {e}")
+                st.error(f"An unexpected error occurred: {e}")
+
 
     elif module == "Fuel Requirement":
         st.header("Fuel Requirement Estimator")
+
+        # User Inputs
         source = st.text_input("Source Location:")
         destination = st.text_input("Destination Location:")
+        actual_weight = st.number_input("Enter weight of goods (in tons):", min_value=7.5, value=20.0)
+        number_of_wheels = st.selectbox("Number of Wheels:", [6, 10, 12, 14, 16, 18])
 
+        # Vehicle Options: number_of_wheels determines capacity and mileage
         vehicle_options = {
-            "6 Wheeler (10 Tons)": {"capacity": 10, "fuel_efficiency": 6},
-            "10 Wheeler (15 Tons)": {"capacity": 15, "fuel_efficiency": 5},
-            "12 Wheeler (20 Tons)": {"capacity": 20, "fuel_efficiency": 3.5},
-            "14 Wheeler (25 Tons)": {"capacity": 25, "fuel_efficiency": 3},
-            "16 Wheeler (30 Tons)": {"capacity": 30, "fuel_efficiency": 3.2},
-            "18 Wheeler (35 Tons)": {"capacity": 35, "fuel_efficiency": 2.5},
+            6: {"capacity": 7.5, "one_side_mileage": 7, "both_side_mileage": 6},
+            10: {"capacity": 13.5, "one_side_mileage": 5.5, "both_side_mileage": 4.5},
+            12: {"capacity": 20, "one_side_mileage": 4.5, "both_side_mileage": 3.2},
+            14: {"capacity": 25, "one_side_mileage": 4.2, "both_side_mileage": 3},
+            16: {"capacity": 30, "one_side_mileage": 3.7, "both_side_mileage": 2.5},
+            18: {"capacity": 35, "one_side_mileage": 3.5, "both_side_mileage": 2.3},
         }
-        vehicle_type = st.selectbox("Type of Vehicle:", list(vehicle_options.keys()))
-        selected_vehicle = vehicle_options[vehicle_type]
+
+        selected_vehicle = vehicle_options[number_of_wheels]
+        capacity = selected_vehicle["capacity"]  # Extract capacity
+        loading_condition = st.radio(
+            "Is the vehicle loaded on one side or both sides?",
+            ("One Side Loaded", "Both Sides Loaded")
+        )
+
+        # Calculate Mileage Based on Loading Condition
+        mileage = (
+            selected_vehicle["one_side_mileage"]
+            if loading_condition == "One Side Loaded"
+            else selected_vehicle["both_side_mileage"]
+        )
 
         if source and destination:
             source_coords = get_coordinates(source)
@@ -209,25 +266,25 @@ else:
                     route_map = display_map(source_coords, destination_coords, route_coords)
                     folium_static(route_map)
 
-                    weight = st.number_input("Enter weight of goods (in tons):", min_value=0.0, value=15.0)
+                    # Prepare Data for Scaler
+                    try:
+                        input_data = [distance, actual_weight, number_of_wheels, capacity, mileage]
+                        input_data_scaled = scaler.transform([input_data])
 
-                    if st.button("Predict Fuel Requirement"):
-                        try:
-                            input_data = [
-                                distance,
-                                weight,
-                                selected_vehicle["capacity"],
-                                selected_vehicle["fuel_efficiency"],
-                            ]
-                            input_data_scaled = scaler.transform([input_data])
-                            predicted_efficiency = fuel_model.predict(input_data_scaled)[0]
-                            max_efficiency = 6 if selected_vehicle["capacity"] <= 15 else 3.5
-                            predicted_efficiency = min(max_efficiency, max(1, predicted_efficiency))
-                            predicted_fuel = distance / predicted_efficiency
-                            st.success(f"Predicted Fuel Requirement: {predicted_fuel:.2f} liters")
-                            st.info(f"Predicted Fuel Efficiency: {predicted_efficiency:.2f} km/l")
-                        except Exception as e:
-                            st.error(f"Error during prediction: {e}")
+                        # Predict Fuel Efficiency
+                        predicted_efficiency = fuel_model.predict(input_data_scaled)[0]
+
+                        # Constrain efficiency to realistic bounds
+                        max_efficiency = 6 if selected_vehicle["capacity"] <= 15 else 3.5
+                        predicted_efficiency = min(max_efficiency, max(1, predicted_efficiency))
+
+                        # Calculate Fuel Requirement
+                        predicted_fuel = distance / predicted_efficiency
+                        st.success(f"Predicted Fuel Requirement: {predicted_fuel:.2f} liters")
+                        st.info(f"Predicted Fuel Efficiency: {predicted_efficiency:.2f} km/l")
+                    except Exception as e:
+                        st.error(f"Error during prediction: {e}")
+
 
     elif module == "Feedback":
         st.header("User Feedback")
