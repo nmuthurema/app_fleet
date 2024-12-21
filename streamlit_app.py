@@ -12,30 +12,23 @@ import tensorflow as tf
 import gdown
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-# Initialize and Configure the App
+# Set up your page configuration and Google Maps API as before
 st.set_page_config(page_title="Fleet Management", layout="wide", page_icon="🚗")
-
-# Google Maps API Key
 GOOGLE_MAPS_API_KEY = "AIzaSyD9g1A2zYNNFMLfN0MReug2H5D8qjIkyNA"
-
-# Initialize Google Maps Client
 gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
 
-# Define Google Drive downloader
+# Define Google Drive downloader function
 def download_from_drive(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     gdown.download(url, output, quiet=False)
 
 # Load Models and Files
 def load_model(file_path):
-    try:
-        if file_path.endswith('.h5'):
-            return tf.keras.models.load_model(file_path)
-        elif file_path.endswith('.pkl'):
-            with open(file_path, 'rb') as f:
-                return pickle.load(f)
-    except Exception as e:
-        st.error(f"Error loading {file_path}: {str(e)}")
+    if file_path.endswith('.h5'):
+        return tf.keras.models.load_model(file_path)
+    elif file_path.endswith('.pkl'):
+        with open(file_path, 'rb') as f:
+            return pickle.load(f)
 
 def download_and_load_models():
     file_ids = {
@@ -48,7 +41,6 @@ def download_and_load_models():
     models = {}
     for filename, file_id in file_ids.items():
         if not os.path.exists(filename):
-            st.write(f"Downloading {filename}...")
             download_from_drive(file_id, filename)
         models[filename.split('.')[0]] = load_model(filename)
     return models
@@ -119,53 +111,6 @@ def display_map(source_coords, destination_coords, route_coords=None):
         folium.PolyLine(route_coords, color="blue", weight=2.5, opacity=1).add_to(m)
     return m
 
-# Authentication
-def authenticate_user():
-    if "authenticated" not in st.session_state:
-        st.session_state.authenticated = False
-
-    with st.sidebar:
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        if st.button("Login"):
-            if username == "admin" and password == "kss@1234":  # Update these credentials as needed
-                st.session_state.authenticated = True
-                st.success("Login successful!")
-            else:
-                st.error("Incorrect username or password.")
-
-    return st.session_state.authenticated
-
-def main():
-    if authenticate_user():
-        option = st.sidebar.selectbox("Choose an option", ["Home", "Pipe Counting", "Tyre Life Prediction", "Fuel Efficiency", "Feedback"])
-        
-        if option == "Home":
-            st.title("Welcome to Fleet Management Dashboard")
-            try:
-                logo_image = Image.open('logo.png')  # Ensure this path is correct
-                st.image(logo_image, width=300, caption='Fleet Management System')
-            except IOError:
-                st.error("Error loading logo image!")
-            
-            st.markdown("Select an option from the sidebar to get started.")
-
-        elif option == "Pipe Counting":
-            perform_pipe_counting()
-
-        elif option == "Tyre Life Prediction":
-            perform_tyre_life_prediction()
-
-        elif option == "Fuel Efficiency":
-            calculate_fuel_efficiency()
-
-        elif option == "Feedback":
-            collect_user_feedback()
-    else:
-        st.sidebar.warning("Please login to continue.")
-
-
-# Feature Modules
 def perform_pipe_counting():
     st.title("Pipe Counting")
     uploaded_file = st.file_uploader("Upload an image for analysis", type=["jpg", "png", "jpeg"])
@@ -187,18 +132,53 @@ def perform_tyre_life_prediction(tyre_model):
         st.image(image, caption='Uploaded Tyre Image', use_column_width=True)
         st.success(f"Predicted Class: {predicted_class}, Confidence: {confidence:.2f}%")
 
-def calculate_fuel_efficiency():
-    st.header("Fuel Requirement Estimator")
-    # Similar to existing functionality for fuel efficiency
 
-def collect_user_feedback():
-    st.header("User Feedback")
-    feedback = st.text_area("Share your feedback about the app:")
-    if st.button("Submit Feedback"):
-        if feedback:
-            st.success("Thank you for your feedback!")
-        else:
-            st.error("Please provide some feedback before submitting.")
+def authenticate_user():
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
+
+    with st.sidebar:
+        if not st.session_state['authenticated']:
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            if st.button("Login"):
+                if username == "admin" and password == "kss@1234":  # Validate credentials
+                    st.session_state['authenticated'] = True
+                    st.success("Login successful!")
+                else:
+                    st.error("Incorrect username or password.")
+
+    if not st.session_state['authenticated']:
+        st.sidebar.warning("Please log in to continue.")
+
+    return st.session_state['authenticated']
+
+def main():
+    if authenticate_user():
+        option = st.sidebar.selectbox("Choose an option", ["Home", "Pipe Counting", "Tyre Life Prediction", "Fuel Efficiency", "Feedback"])
+        
+        if option == "Home":
+            st.title("Welcome to Fleet Management Dashboard")
+            try:
+                logo_image = Image.open('logo.png')
+                st.image(logo_image, width=300, caption='Fleet Management System')
+            except IOError:
+                st.error("Error loading logo image!")
+            st.markdown("Select an option from the sidebar to get started.")
+
+        elif option == "Pipe Counting":
+            perform_pipe_counting()
+
+        elif option == "Tyre Life Prediction":
+            perform_tyre_life_prediction(tyre_model)
+
+        elif option == "Fuel Efficiency":
+            calculate_fuel_efficiency()
+
+        elif option == "Feedback":
+            collect_user_feedback()
+    else:
+        st.sidebar.warning("Please login to continue.")
 
 if __name__ == "__main__":
     main()
