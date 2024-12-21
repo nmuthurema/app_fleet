@@ -71,7 +71,7 @@ except Exception as e:
 
 # Utility Functions
 def preprocess_image(image, model):
-    required_shape = model.input_shape[1:]  # (height, width, channels)
+    required_shape = model.input_shape[1:]
     image = cv2.resize(image, (required_shape[1], required_shape[0]))
     if required_shape[-1] == 1:
         if len(image.shape) == 3:
@@ -131,10 +131,6 @@ def display_map(source_coords, destination_coords, route_coords=None):
     if route_coords:
         folium.PolyLine(route_coords, color="blue", weight=2.5, opacity=1).add_to(m)
     return m
-
-def prepare_fuel_input(source, destination, vehicle):
-    input_tensor = np.array([[len(source), len(destination), vehicle["capacity"], vehicle["fuel_efficiency"]]])
-    return input_tensor
 
 # Authentication
 if "authenticated" not in st.session_state:
@@ -213,32 +209,25 @@ else:
                     route_map = display_map(source_coords, destination_coords, route_coords)
                     folium_static(route_map)
 
-                    vehicle_no = st.text_input("Enter vehicle number (optional):")
                     weight = st.number_input("Enter weight of goods (in tons):", min_value=0.0, value=15.0)
 
                     if st.button("Predict Fuel Requirement"):
                         try:
-                            # Prepare input data
-                            input_data = [distance, weight, selected_vehicle["capacity"], selected_vehicle["fuel_efficiency"]]
-                            
-                            # Scale input data using the loaded scaler
+                            input_data = [
+                                distance,
+                                weight,
+                                selected_vehicle["capacity"],
+                                selected_vehicle["fuel_efficiency"],
+                            ]
                             input_data_scaled = scaler.transform([input_data])
-                            
-                            # Predict fuel efficiency
                             predicted_efficiency = fuel_model.predict(input_data_scaled)[0]
-                            
-                            # Sanity checks for efficiency
                             max_efficiency = 6 if selected_vehicle["capacity"] <= 15 else 3.5
                             predicted_efficiency = min(max_efficiency, max(1, predicted_efficiency))
-                            
-                            # Calculate fuel requirement
                             predicted_fuel = distance / predicted_efficiency
-                            
                             st.success(f"Predicted Fuel Requirement: {predicted_fuel:.2f} liters")
                             st.info(f"Predicted Fuel Efficiency: {predicted_efficiency:.2f} km/l")
                         except Exception as e:
                             st.error(f"Error during prediction: {e}")
-
 
     elif module == "Feedback":
         st.header("User Feedback")
