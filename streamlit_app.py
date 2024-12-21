@@ -133,32 +133,42 @@ def authenticate_user():
                 st.error("Invalid username or password.")
     return st.session_state.authenticated
 
-# Main Functionality
 def main():
+    st.write("Debug: Starting main function")  # Debug output
     if authenticate_user():
+        st.write("Debug: User authenticated")  # Debug output
         option = st.sidebar.selectbox("Choose an option", ["Home", "Pipe Counting", "Tyre Life Prediction", "Fuel Efficiency", "Feedback"])
         
         if option == "Home":
             st.title("Welcome to Fleet Management Dashboard")
-            try:
-                logo_image = Image.open('logo.png')  # Attempt to load the logo image
-                st.image(logo_image, width=300, caption='Logo')  # Display the logo with specified width
-            except IOError:
-                st.error("Error loading logo image!")  # Error message if image cannot be loaded
-            
+            logo_path = 'logo.png'  # Make sure this path is correct
+            if os.path.exists(logo_path):
+                logo_image = Image.open(logo_path)
+                st.image(logo_image, width=300, caption='Fleet Management System')
+                st.write("Debug: Logo loaded")  # Debug output
+            else:
+                st.error("Logo file not found!")
+
             st.markdown("Select an option from the sidebar to get started.")
 
         elif option == "Pipe Counting":
+            st.write("Debug: Pipe Counting selected")  # Debug output
             perform_pipe_counting()
 
         elif option == "Tyre Life Prediction":
+            st.write("Debug: Tyre Life Prediction selected")  # Debug output
             perform_tyre_life_prediction(tyre_model)
 
         elif option == "Fuel Efficiency":
+            st.write("Debug: Fuel Efficiency selected")  # Debug output
             calculate_fuel_efficiency()
 
         elif option == "Feedback":
+            st.write("Debug: Feedback selected")  # Debug output
             collect_user_feedback()
+    else:
+        st.write("Debug: User not authenticated")  # Debug output
+
 
 # Feature Modules
 def perform_pipe_counting():
