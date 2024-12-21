@@ -186,10 +186,15 @@ else:
             # Convert to PIL Image for Streamlit compatibility
             logo_image = Image.fromarray(logo_rgb)
     
-            # Display the logo using `use_container_width`
-            st.image(logo_image, use_container_width=True)
-        except Exception as e:
-            st.error(f"Failed to load logo: {e}")
+            # Display the logo with version compatibility
+            if version.parse(st.__version__) >= version.parse("1.12.0"):
+                st.image(logo_image, use_container_width=True)
+            else:
+                st.image(logo_image, use_column_width=True)
+
+    except Exception as e:
+        st.error(f"Failed to load logo: {e}")
+
     with col2:
         st.title("Fleet Management")
         st.write("Analyze pipes, estimate fuel requirements, and predict tyre life with ease!")
