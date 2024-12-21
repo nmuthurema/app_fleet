@@ -100,21 +100,21 @@ else:
 
 
     elif module == "Fuel Requirement":
-    st.header("Fuel Requirement Estimator")
-    source = st.text_input("Source Location:")
-    destination = st.text_input("Destination Location:")
+        st.header("Fuel Requirement Estimator")
+        source = st.text_input("Source Location:")
+        destination = st.text_input("Destination Location:")
 
-    vehicle_options = {
-        "6 Wheeler (10 Tons)": {"capacity": 10, "fuel_efficiency": 6},
-        "10 Wheeler (15 Tons)": {"capacity": 15, "fuel_efficiency": 5},
-        "12 Wheeler (20 Tons)": {"capacity": 20, "fuel_efficiency": 3.5},
-        "14 Wheeler (25 Tons)": {"capacity": 25, "fuel_efficiency": 3},
-        "16 Wheeler (30 Tons)": {"capacity": 30, "fuel_efficiency": 3.2},
-        "18 Wheeler (35 Tons)": {"capacity": 35, "fuel_efficiency": 2.5},
-    }
+        vehicle_options = {
+            "6 Wheeler (10 Tons)": {"capacity": 10, "fuel_efficiency": 6},
+            "10 Wheeler (15 Tons)": {"capacity": 15, "fuel_efficiency": 5},
+            "12 Wheeler (20 Tons)": {"capacity": 20, "fuel_efficiency": 3.5},
+            "14 Wheeler (25 Tons)": {"capacity": 25, "fuel_efficiency": 3},
+            "16 Wheeler (30 Tons)": {"capacity": 30, "fuel_efficiency": 3.2},
+            "18 Wheeler (35 Tons)": {"capacity": 35, "fuel_efficiency": 2.5},
+        }
 
-    vehicle_type = st.selectbox("Type of Vehicle:", list(vehicle_options.keys()))
-    selected_vehicle = vehicle_options[vehicle_type]
+        vehicle_type = st.selectbox("Type of Vehicle:", list(vehicle_options.keys()))
+        selected_vehicle = vehicle_options[vehicle_type]
 
     if st.button("Calculate"):
         input_tensor = prepare_fuel_input(source, destination, selected_vehicle)
