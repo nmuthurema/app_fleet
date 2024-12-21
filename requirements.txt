@@ -1,4 +1,4 @@
-streamlit==1.25.0
+streamlit
 opencv-python-headless
 tensorflow
 numpy
@@ -6,3 +6,4 @@ gdown
 scikit-learn
 pandas
 pillow
+lightgbm
