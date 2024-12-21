@@ -206,11 +206,23 @@ else:
         uploaded_file = st.file_uploader("Upload an image:", type=["jpg", "png", "jpeg"])
         if uploaded_file is not None:
             try:
-                # Read and display the uploaded image
+                # Read the uploaded image as bytes
                 file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+                
+                # Decode the image using OpenCV
                 image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-                st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_container_width=True)
-
+                
+                # Check Streamlit version for compatibility
+                from packaging import version
+                if version.parse(st.__version__) >= version.parse("1.12.0"):
+                    st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_container_width=True)
+                else:
+                    st.image(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), caption="Uploaded Image", use_column_width=True)
+            
+            except cv2.error as e:
+                st.error(f"OpenCV error while processing the image: {e}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {e}")
                 # Select appropriate model
                 model = pipe_model if module == "Pipe Counting" else tyre_model
 
