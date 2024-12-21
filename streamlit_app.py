@@ -139,25 +139,43 @@ def authenticate_user():
 
     return st.session_state['authenticated']
 
-# Function to Perform Tyre Life Prediction
-def perform_tyre_life_prediction(model):
+def get_tyres_lifetime_and_maintenance(predicted_class):
+    lifetime_mapping = {
+        0: {
+            "lifetime": "5 years",  # class_1 (New Tyres)
+            "maintenance": "Inspect every 6 months for wear and tear. Ensure proper inflation levels and alignment."
+        },
+        1: {
+            "lifetime": "3 years",  # class_2 (Cracked Tyres)
+            "maintenance": "Inspect monthly for cracks and damage. Consider rotating tyres to even out wear. Replace if cracks deepen."
+        },
+        2: {
+            "lifetime": "1 year",  # class_3 (Severely Cracked Tyres)
+            "maintenance": "Replace immediately to avoid safety risks. Avoid driving until the replacement is done."
+        }
+    }
+    return lifetime_mapping.get(predicted_class, {"lifetime": "Unknown Class", "maintenance": "No suggestions available"})
+
+def perform_tyre_life_prediction(tyre_model):
     st.title("Tyre Life Prediction")
     uploaded_file = st.file_uploader("Upload an image of the tyre", type=["jpg", "png", "jpeg"])
     if uploaded_file is not None:
-        # Load image using PIL
         image = Image.open(uploaded_file).convert('RGB')
-        
-        # Preprocess the image
-        image_array = preprocess_image(image, model)
-        
-        # Make predictions
-        prediction = model.predict(image_array)
+        image_array = preprocess_image(image, tyre_model)
+        prediction = tyre_model.predict(image_array)
         predicted_class = np.argmax(prediction)
         confidence = np.max(prediction) * 100
-        
+
         # Display the image and the results
         st.image(image, caption='Uploaded Tyre Image', use_column_width=True)
-        st.success(f"Predicted Class: {predicted_class}, Confidence: {confidence:.2f}%")
+        result_text = f"Predicted Class: {predicted_class}, Confidence: {confidence:.2f}%"
+        st.success(result_text)
+
+        # Fetch and display the lifetime and maintenance suggestions
+        tyre_info = get_tyres_lifetime_and_maintenance(predicted_class)
+        st.subheader("Estimated Tyre Lifetime and Maintenance")
+        st.write(f"**Estimated Lifetime:** {tyre_info['lifetime']}")
+        st.write(f"**Maintenance Suggestion:** {tyre_info['maintenance']}")
 
 def perform_pipe_counting():
     st.title("Pipe Counting")
