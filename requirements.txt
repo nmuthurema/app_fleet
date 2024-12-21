@@ -11,6 +11,4 @@ tensorflow
 googlemaps
 gdown
 tenacity
-pickle
-packaging
-cv2
+
