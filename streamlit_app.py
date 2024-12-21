@@ -6,6 +6,7 @@ import numpy as np
 import pickle
 import googlemaps
 from PIL import Image
+from packaging import version
 import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import VotingRegressor
@@ -52,20 +53,20 @@ if not os.path.exists("logo.png"):
 
 # Load models with error handling
 try:
-    if not os.path.exists("pipe_model.h5"):
+    # Validate file existence and size
+    if not os.path.exists("pipe_model.h5") or os.path.getsize("pipe_model.h5") == 0:
         st.write("Downloading pipe model...")
         download_from_drive(PIPE_MODEL_ID, "pipe_model.h5")
+        if not os.path.exists("pipe_model.h5") or os.path.getsize("pipe_model.h5") == 0:
+            raise ValueError("Pipe model file is empty or corrupted.")
 
-    # Ensure the file is valid before loading
-    if os.path.getsize("pipe_model.h5") == 0:
-        raise ValueError("Pipe model file is empty or corrupted.")
-
+    # Load the model
     pipe_model = tf.keras.models.load_model("pipe_model.h5")
-    
+    st.success("Pipe model loaded successfully!")
 except tf.errors.OpError as e:
     st.error(f"TensorFlow error while loading pipe model: {e}")
 except ValueError as e:
-    st.error(f"Value error: {e}")
+    st.error(f"Validation error: {e}")
 except Exception as e:
     st.error(f"Unexpected error while loading pipe model: {e}")
 
