@@ -123,12 +123,10 @@ def display_map(source_coords, destination_coords, route_coords=None):
 def authenticate_user():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
-    if not st.session_state.authenticated:
-        st.title("User Login")
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
         if st.button("Login"):
-            if username == "admin" and password == "kss@1234":
+            if username == "admin" and password == "kss@1234":  # Change to your secure credential checking
                 st.session_state.authenticated = True
                 st.success("Login successful!")
             else:
@@ -154,7 +152,7 @@ def main():
             perform_pipe_counting()
 
         elif option == "Tyre Life Prediction":
-            perform_tyre_life_prediction()
+            perform_tyre_life_prediction(tyre_model)
 
         elif option == "Fuel Efficiency":
             calculate_fuel_efficiency()
@@ -172,14 +170,17 @@ def perform_pipe_counting():
         st.image(image, caption='Uploaded Image', use_column_width=True)
         st.success(f"Number of pipes detected: {np.argmax(prediction)}")
 
-def perform_tyre_life_prediction():
+def perform_tyre_life_prediction(tyre_model):
     st.title("Tyre Life Prediction")
     uploaded_file = st.file_uploader("Upload an image of the tyre", type=["jpg", "png", "jpeg"])
     if uploaded_file is not None:
-        image = np.array(Image.open(uploaded_file))
-        prediction = tyre_model.predict(preprocess_image(image, tyre_model))
+        image = Image.open(uploaded_file).convert('RGB')
+        image_array = preprocess_image(image, tyre_model)
+        prediction = tyre_model.predict(image_array)
+        predicted_class = np.argmax(prediction)
+        confidence = np.max(prediction) * 100
         st.image(image, caption='Uploaded Tyre Image', use_column_width=True)
-        st.success(f"Estimated Tyre Life: {prediction[0, 0]:.2f} km")
+        st.success(f"Predicted Class: {predicted_class}, Confidence: {confidence:.2f}%")
 
 def calculate_fuel_efficiency():
     st.header("Fuel Requirement Estimator")
