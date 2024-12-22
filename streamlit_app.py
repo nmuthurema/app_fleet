@@ -142,15 +142,15 @@ def authenticate_user():
 def get_tyres_lifetime_and_maintenance(predicted_class):
     lifetime_mapping = {
         0: {
-            "lifetime": "5 years",  # class_1 (New Tyres)
-            "maintenance": "Inspect every 6 months for wear and tear. Ensure proper inflation levels and alignment."
+            "lifetime": "~50000 kms",  # class_1 (New Tyres)
+            "maintenance": "Inspect every 2 months for wear and tear. Ensure proper inflation levels and alignment."
         },
         1: {
-            "lifetime": "3 years",  # class_2 (Cracked Tyres)
+            "lifetime": "~10000 kms",  # class_2 (Cracked Tyres)
             "maintenance": "Inspect monthly for cracks and damage. Consider rotating tyres to even out wear. Replace if cracks deepen."
         },
         2: {
-            "lifetime": "1 year",  # class_3 (Severely Cracked Tyres)
+            "lifetime": "~1000 kms",  # class_3 (Severely Cracked Tyres)
             "maintenance": "Replace immediately to avoid safety risks. Avoid driving until the replacement is done."
         }
     }
